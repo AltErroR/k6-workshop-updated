@@ -1,20 +1,19 @@
-import { check, group } from "k6";
+import { group, check } from "k6";
 import { requestsManager } from "../requestsManager.ts";
 import { Order } from "../entities/order.ts";
 import { entitiesManager } from "../entitiesManager.ts";
-import { utilitiesManager } from "../utilitiesManager.ts";
+//@ts-ignore
+import { randomString } from "../../framework/k6Libs/k6Libs.js"
 
 export class StoreSteps {
 
-  placeOrder(): { testOrderId: string, placedOrder: Order };
-  placeOrder<T extends { testOrderId: string }>(stepData: T): T & { placedOrder: Order };
+  placeOrder<T extends { testOrderId: string }>(stepData: T): T & { placedOrder: Order } {
+    const orderId = stepData.testOrderId
 
-  placeOrder<T extends { testOrderId: string }>(stepData?: T): any {
-    const orderId = stepData?.testOrderId ?? utilitiesManager.randomNumber(9);
     const order: Partial<Order> = {
       id: orderId,
-      petId: utilitiesManager.randomNumber(1000),
-      quantity: utilitiesManager.randomNumber(5),
+      petId: randomString(4, '0123456789'),
+      quantity: randomString(1, '12345'),
       status: "placed",
       complete: false
     }
@@ -23,38 +22,32 @@ export class StoreSteps {
       const resp = requestsManager.storeService.placeOrder(
         JSON.stringify(orderToPlace)
       );
-      utilitiesManager.log(resp,200)
-
       const placedOrder: Order = JSON.parse(resp.body as string);
       return { ...(stepData || {}), testOrderId: orderId, placedOrder };
     });
   }
 
-  //overload
-  getOrder(): { testOrderId: string, foundOrder: Order };
-  getOrder<T extends { testOrderId: string }>(stepData: T): T & { foundOrder: Order };
-
-  //implementation
-  getOrder<T extends { testOrderId: string }>(stepData?: T): any {
+  getOrder<T extends { testOrderId: string }>(stepData: T): T & { foundOrder: Order } {
     return group('GetOrder group', function () {
-      const orderId = stepData?.testOrderId ?? utilitiesManager.randomNumber(9);
-
+      const orderId = stepData?.testOrderId ?? randomString(1, '123456789');
       const resp = requestsManager.storeService.getOrder(orderId);
-      utilitiesManager.log(resp, 200);
-
       const foundOrder: Order = JSON.parse(resp.body as string);
-      return { ...(stepData || {}), testOrderId:orderId, foundOrder };
+      return { ...(stepData || {}), testOrderId: orderId, foundOrder };
     });
   }
 
-  //for store steps and store scenario I decided to try to remove from set of data removed order
-  //not sure if it is correct approach though
-   deleteOrder<T extends {  foundOrder: Order }>(stepData: T): Omit<T, 'foundOrder'> {
+  deleteOrderById<T extends object>(stepData: T, orderId: string, expectedStatus: number | number[] = 200): Omit<T, 'foundOrder'> {
     return group('DeleteOrder group', function () {
-      const resp = requestsManager.storeService.deleteOrder(stepData.foundOrder.id);
-      utilitiesManager.log(resp, 200);
+      const resp = requestsManager.storeService.deleteOrder(orderId, undefined, expectedStatus);
 
-      const { foundOrder, ...rest } = stepData as any;
+      if (resp.status === 200) {
+        const verifyResp = requestsManager.storeService.getOrder(orderId, undefined, 404);
+        check(verifyResp, {
+          'DeleteOrder: order not found after delete (404)': (r) => r.status === 404,
+        });
+      }
+
+      const { foundOrder, ...rest } = stepData as T & { foundOrder?: Order };
       return rest as Omit<T, 'foundOrder'>;
     });
   }

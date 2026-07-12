@@ -1,15 +1,15 @@
-import { check, group } from "k6";
+import { group, check } from "k6";
 import { requestsManager } from "../../requestsManager.ts";
 import { User } from "../../entities/user.ts";
 import { entitiesManager } from "../../entitiesManager.ts";
-import { utilitiesManager } from "../../utilitiesManager.ts";
+//@ts-ignore
+import { randomString } from "../../../framework/k6Libs/k6Libs.js"
+
 
 export class AddUser {
-    execute(): { username: string };
-    execute<T extends { username: string }>(stepData: T): T;
 
-    execute<T extends { username: string }>(stepData?: T): any {
-        const username = stepData?.username ?? utilitiesManager.randomString(10);
+    execute<T extends { username: string }>(stepData: T): T & { addedUser: User } {
+        const username = stepData?.username ?? randomString(10,);
         const userData: Partial<User> = {
             username: username
         }
@@ -18,8 +18,15 @@ export class AddUser {
             const resp = requestsManager.userService.addUser(
                 JSON.stringify(userToAdd)
             );
-            utilitiesManager.log(resp, 200)
-            return { ...(stepData || {}), username };
+
+            const verifyResp = requestsManager.userService.getUserByUsername(username);
+            const foundUser: User = JSON.parse(verifyResp.body as string);
+
+            check(foundUser, {
+                'AddUser: user created with correct username': (u) => u.username === username,
+            });
+
+            return { ...(stepData || {}), username, addedUser: userToAdd };
         });
     }
 }

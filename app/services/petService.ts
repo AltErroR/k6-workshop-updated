@@ -4,22 +4,25 @@ import { API_KEY } from "../../config/k6Config.ts"
 
 
 
-export class PetService extends BaseRequestsService{
+export class PetService extends BaseRequestsService {
 
-    findPetByStatus(status:"available"|"sold"|"pending", params?:Params){
-        return this.get(`/v2/pet/findByStatus?status=${status}`,params)
+    findPetByStatus(status: "available" | "sold" | "pending", params?: Params) {
+        return this.get(`/v2/pet/findByStatus?status=${status}`, params)
     }
 
-    findPetById(id:string, params?:Params){
-        return this.get(`/v2/pet/${id}`,params)
+    findPetById(id: string, params?: Params, expectedStatus: number | number[] = 200) {
+        return this.get(`/v2/pet/${id}`, params, expectedStatus)
     }
 
-    //updates existing pet or creates new - misleading info in swagger
-    addOrUpdatePet(body:RequestBody,params?:Params){
-        return this.put(`/v2/pet`,body,params)
+    addPet(body: RequestBody, params?: Params) {
+        return this.post(`/v2/pet`, body, params)
     }
 
-    updatePetStatus(id:string, name:string, status:"available"|"sold"|"pending",params?:Params){
+    updatePet(body: RequestBody, params?: Params) {
+        return this.put(`/v2/pet`, body, params)
+    }
+
+    updatePetStatus(id: string, name: string, status: "available" | "sold" | "pending", params?: Params) {
         const formParams: Params = {
             ...params,
             headers: {
@@ -27,20 +30,16 @@ export class PetService extends BaseRequestsService{
                 ...params?.headers
             }
         };
-        return this.post(`/v2/pet/${id}`,`name=${name}&status=${status}`,formParams)
+        return this.post(`/v2/pet/${id}`, `name=${name}&status=${status}`, formParams)
     }
 
-    deletePet(id:string,params?:Params){
-        return this.delete(`/v2/pet/${id}`, null, this.addApiKeyHeader(params))
-    }
-
-    private addApiKeyHeader(params?: Params): Params {
-        return {
+    deletePet(id: string, params?: Params, expectedStatus: number | number[] = 200) {
+        return this.delete(`/v2/pet/${id}`, null, {
             ...params,
             headers: {
                 ...params?.headers,
                 'api_key': API_KEY
             }
-        }
+        }, expectedStatus)
     }
 }

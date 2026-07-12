@@ -1,6 +1,8 @@
-import petScenario from "./scenarios/petScenario.ts";
-import storeScenario from "./scenarios/storeScenario.ts";
-import userScenario from "./scenarios/userScenario.ts";
+import petScenario, { setup as petSetup } from "../scenarios/petScenario.ts";
+import storeScenario, { setup as storeSetup } from "../scenarios/storeScenario.ts";
+import userScenario, { setup as userSetup } from "../scenarios/userScenario.ts";
+
+export { handleSummary } from "../../framework/k6Summary.ts"
 
 export const options = {
   scenarios: {
@@ -28,20 +30,17 @@ export const options = {
   },
 };
 
-
-
 export function runPetScenario() {
-  console.log("=== Running Pet Scenario ===");
-  petScenario();
+  const setupData = petSetup();
+  petScenario(setupData);
 }
 
 export function runStoreScenario() {
-  console.log("=== Running Store Scenario ===");
-  storeScenario();
+  const setupData = storeSetup();
+  storeScenario(setupData);
 }
 
 export function runUserScenario() {
-  console.log("=== Running User Scenario ===");
-  userScenario();
+  const setupData = userSetup();
+  userScenario(setupData);
 }
-

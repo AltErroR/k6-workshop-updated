@@ -9,16 +9,16 @@ export class UserService extends BaseRequestsService {
         return this.post(`/v2/user`, body, params)
     }
 
-    deleteUser(username: string) {
-        return this.delete(`/v2/user/${username}`, null,)
+    deleteUser(username: string, params?: Params, expectedStatus: number | number[] = 200) {
+        return this.delete(`/v2/user/${username}`, null, params, expectedStatus)
     }
 
-    getUserByUsername(username: string) {
-        return this.get(`/v2/user/${username}`)
+    getUserByUsername(username: string, params?: Params, expectedStatus: number | number[] = 200) {
+        return this.get(`/v2/user/${username}`, params, expectedStatus)
     }
 
-    updateUser(username:string,body:RequestBody,params?:Params){
-        return this.put(`/v2/user/${username}`,body,params)
+    updateUser(username: string, body: RequestBody, params?: Params) {
+        return this.put(`/v2/user/${username}`, body, params)
     }
 
 }

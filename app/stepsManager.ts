@@ -1,19 +1,19 @@
 import { PetSteps } from "./steps/petSteps.ts"
 import { StoreSteps } from "./steps/storeSteps.ts"
 import { AddUser } from "./steps/userSteps/addUser.ts"
-import { DeleteUser } from "./steps/userSteps/deleteUser.ts"
+import { DeleteUserByUsername } from "./steps/userSteps/deleteUserByUsername.ts"
 import { GetUserByUsername } from "./steps/userSteps/getUserByUsername.ts"
-import { UpdateUser } from "./steps/userSteps/updateUser.ts"
+import { UpdateUserByUsername } from "./steps/userSteps/updateUserByUsername.ts"
 
 
-class StepsManager{
+class StepsManager {
 
     petSteps: PetSteps = new PetSteps()
     storeSteps: StoreSteps = new StoreSteps()
     addUser: AddUser = new AddUser()
-    deleteUser: DeleteUser = new DeleteUser()
+    deleteUserByUsername: DeleteUserByUsername = new DeleteUserByUsername()
     getUserByUsername: GetUserByUsername = new GetUserByUsername()
-    updateUser: UpdateUser = new UpdateUser()
+    updateUserByUsername: UpdateUserByUsername = new UpdateUserByUsername()
 }
 
 export const stepsManager = new StepsManager()

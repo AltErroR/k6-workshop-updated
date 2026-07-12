@@ -4,25 +4,22 @@ import { check } from "k6";
 class UtilitiesManager {
 
 
-  log(resp: RefinedResponse<"text" | "binary"| "none">, status: number): void {
-    const isSuccess = check(resp, { 'status equals 200': (r) => r.status === status });
+  log(resp: RefinedResponse<"text" | "binary" | "none">, status: number | number[]): void {
+    const expectedStatuses = Array.isArray(status) ? status : [status];
+    const isSuccess = check(resp, {
+      [`status is one of [${expectedStatuses.join(', ')}]`]: (r) => expectedStatuses.includes(r.status)
+    });
 
     if (!isSuccess) {
-      throw new Error(`Failed to get expected status. Expected:${status}, actual:${resp.status}, response body: ${resp.body}`);
+      throw new Error(`Failed to get expected status. Expected:[${expectedStatuses.join(', ')}], actual:${resp.status}, response body: ${resp.body}`);
     }
 
-    if (!resp.body || typeof resp.body !== 'string') {
+    if (resp.status >= 200 && resp.status < 300) {
+      if (!resp.body || typeof resp.body !== 'string') {
         throw new Error('Response body is empty or not a string');
       }
+    }
 
-  }
-
-  randomString(length: number): string {
-    return `Pet_${Math.random().toString(36).substring(2, 2 + length)}`
-  }
-
-  randomNumber(max:number):string{
-    return (Math.floor(Math.random() * max) +1).toString()
   }
 
 }

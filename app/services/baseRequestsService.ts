@@ -1,5 +1,6 @@
 import http, { Params, RequestBody } from "k6/http"
 import { BASE_URL } from "../../config/k6Config.ts"
+import { utilitiesManager } from "../utilitiesManager.ts";
 
 
 export class BaseRequestsService {
@@ -9,30 +10,33 @@ export class BaseRequestsService {
             'Content-Type': 'application/json'
         }
     };
-    //for path parametrization. 
-    // 1. Init of baseUrl field
-    // 2. By default baseUrl = BASE_URL
-    // 3. Instance get val of baseUrl
+
     constructor(private readonly baseUrl: string = BASE_URL) {
         this.baseUrl = baseUrl
     }
 
-    protected get(path: string, params?: Params) {
-        return http.get(`${this.baseUrl}${path}`, this.withDefaultHeaders(params))
-
+    protected get(path: string, params?: Params, expectedStatus: number | number[] = 200) {
+        const resp = http.get(`${this.baseUrl}${path}`, this.withDefaultHeaders(params))
+        utilitiesManager.log(resp, expectedStatus)
+        return resp
     }
 
     protected post(path: string, body: RequestBody | null, params?: Params) {
-        return http.post(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
-
+        const resp = http.post(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
+        utilitiesManager.log(resp, 200)
+        return resp
     }
 
     protected put(path: string, body: RequestBody | null, params?: Params) {
-        return http.put(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
+        const resp = http.put(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
+        utilitiesManager.log(resp, 200)
+        return resp
     }
 
-    protected delete(path: string, body: RequestBody | null, params?: Params) {
-        return http.del(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
+    protected delete(path: string, body: RequestBody | null, params?: Params, expectedStatus: number | number[] = 200) {
+        const resp = http.del(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
+        utilitiesManager.log(resp, expectedStatus)
+        return resp
     }
 
     private withDefaultHeaders(params?: Params): Params {

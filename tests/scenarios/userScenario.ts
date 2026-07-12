@@ -1,25 +1,21 @@
 import { stepsManager } from "../../app/stepsManager.ts"
+//@ts-ignore
+import { randomString } from "../../framework/k6Libs/k6Libs.js"
+
+export { handleSummary } from "../../framework/k6Summary.ts"
+
+export function setup() {
+  const setupData1 = { username: randomString(10) }
+  const setupData2 = stepsManager.deleteUserByUsername.execute(setupData1, [200, 404])
+  return setupData2;
+}
 
 
-export default function () {
-  let stepData;
+export default function (setupData: { username: string }) {
 
-  try {
-    stepData = stepsManager.getUserByUsername.execute();
-    stepsManager.deleteUser.execute(stepData);
-  } catch {
-    console.log("User not found (expected)");
-  }
+  const stepData1 = stepsManager.addUser.execute(setupData)
+  const stepData2 = stepsManager.getUserByUsername.execute(stepData1)
+  const stepData3 = stepsManager.updateUserByUsername.execute(stepData2, stepData2.foundUser);
+  const stepData4 = stepsManager.deleteUserByUsername.execute(stepData3);
 
-  stepData = stepData ? stepsManager.addUser.execute(stepData) : stepsManager.addUser.execute();
-  stepData = stepsManager.getUserByUsername.execute(stepData);
-  stepData = stepsManager.updateUser.execute(stepData);
-  stepData = stepsManager.getUserByUsername.execute(stepData);
-  stepsManager.deleteUser.execute(stepData);
-
-  try {
-    stepsManager.getUserByUsername.execute(stepData);
-  } catch (error) {
-    console.log("After deletion: User not found (expected)");
-  }
 }
