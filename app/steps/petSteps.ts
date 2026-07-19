@@ -43,7 +43,7 @@ export class PetSteps {
       );
 
       const foundPet: Pet = JSON.parse(resp.body as string);
-      return { ...stepData, foundPet }
+      return { ...stepData, foundPet, petId: foundPet.id }
     });
   }
 

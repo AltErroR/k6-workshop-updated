@@ -30,7 +30,7 @@ export class UpdateUserByUsername {
                 'UpdateUser: response message matches user ID': (r) => r.message && r.message === updatedUser.id.toString(),
             });
 
-            return { ...stepData, updatedUser }
+            return { ...stepData, updatedUser, username: updatedUser.username }
         });
     }
 }

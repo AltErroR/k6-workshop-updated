@@ -8,8 +8,8 @@ import { randomString } from "../../../framework/k6Libs/k6Libs.js"
 
 export class AddUser {
 
-    execute<T extends {username?: string}>(usernameToUse: string ='', stepData: T = {} as T){
-        const username =  usernameToUse ?? stepData?.username ?? randomString(10,)
+    execute<T extends {username?: string}>(usernameToUse: string, stepData: T = {} as T){
+        const username =  usernameToUse ?? stepData?.username ?? randomString(10)
         const userData: Partial<User> = {
             username: usernameToUse
         }
@@ -23,7 +23,7 @@ export class AddUser {
             const foundUser: User = JSON.parse(verifyResp.body as string);
 
             check(foundUser, {
-                'AddUser: user created with correct username': (u) => u.username === username,
+                'AddUser: user created with correct username': (u) => u.username === String(username),
             });
 
             return { ...stepData, username, addedUser: userToAdd };
