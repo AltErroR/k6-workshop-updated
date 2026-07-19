@@ -5,12 +5,11 @@ import { User } from "../../entities/user.ts";
 
 export class GetUserByUsername {
 
-    execute<T extends { username: string }>(stepData: T): T & { foundUser: User } {
+    execute<T extends object>(username: string , stepData: T = {} as T){
         return group('GetUserByUsername group', function () {
-            const username = stepData.username
             const resp = requestsManager.userService.getUserByUsername(username);
             const user: User = JSON.parse(resp.body as string)
-            return { ...(stepData || {}), username, foundUser: user }
+            return { ...stepData, username, foundUser: user }
         });
     }
 }

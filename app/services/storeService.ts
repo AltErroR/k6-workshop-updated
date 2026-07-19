@@ -12,8 +12,8 @@ export class StoreService extends BaseRequestsService {
         return this.post(`/v2/store/order`, body, params)
     }
 
-    deleteOrder(id: string, params?: Params, expectedStatus: number | number[] = 200) {
-        return this.delete(`/v2/store/order/${id}`, null, params, expectedStatus)
+    deleteOrder(id: string, params?: Params) {
+        return this.delete(`/v2/store/order/${id}`, null, params)
     }
 
 }

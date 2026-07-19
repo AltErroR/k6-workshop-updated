@@ -33,9 +33,9 @@ export class BaseRequestsService {
         return resp
     }
 
-    protected delete(path: string, body: RequestBody | null, params?: Params, expectedStatus: number | number[] = 200) {
+    protected delete(path: string, body: RequestBody | null, params?: Params) {
         const resp = http.del(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
-        utilitiesManager.log(resp, expectedStatus)
+        utilitiesManager.log(resp, 200)
         return resp
     }
 
@@ -45,7 +45,7 @@ export class BaseRequestsService {
             ...params,
             headers: {
                 ...this.defaultParams.headers,
-                ...params?.headers  // User headers override defaults
+                ...params?.headers  
             }
         };
     }

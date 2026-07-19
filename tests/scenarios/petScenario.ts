@@ -1,21 +1,16 @@
 import { stepsManager } from "../../app/stepsManager.ts"
-//@ts-ignore
-import { randomString } from "../../framework/k6Libs/k6Libs.js"
-
 export { handleSummary } from "../../framework/k6Summary.ts"
 
 export function setup() {
-  const setupData1 = { petId: randomString(8, '0123456789') }
-  const setupData2 = stepsManager.petSteps.deleteFoundPet(setupData1, setupData1.petId, [200, 404])
-  return setupData2
+  return stepsManager.petSteps.setupPet()
 }
 
 
 export default function (setupData: { petId: string }) {
-  const stepData1 = stepsManager.petSteps.addPetWithId(setupData.petId, setupData)
-  const stepData2 = stepsManager.petSteps.findPetById(stepData1, stepData1.petId)
-  const stepData3 = stepsManager.petSteps.updateFoundPet(stepData2);
+  const stepData1 = stepsManager.petSteps.addPet(setupData.petId, setupData)
+  const stepData2 = stepsManager.petSteps.findPetById(stepData1.petId, stepData1)
+  const stepData3 = stepsManager.petSteps.updateFoundPet(stepData2.foundPet,stepData2);
   const stepData4 = stepsManager.petSteps.updateFoundPetStatus(stepData3, "sold")
-  const stepData5 = stepsManager.petSteps.deleteFoundPet(stepData4, stepData4.petId)
+  const stepData5 = stepsManager.petSteps.deletePetById(stepData4.petId,stepData4)
 
 }

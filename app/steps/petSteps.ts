@@ -10,43 +10,45 @@ import { randomString } from "../../framework/k6Libs/k6Libs.js"
 export class PetSteps {
 
 
-  getAvailablePet<T extends object>(stepData: T = {} as T): T & { foundPet: Pet, petId: string } {
+  getAvailablePet<T extends object>(stepData?: T) {
     return group('Available group', function () {
       const resp = requestsManager.petService.findPetByStatus("available");
       const pets: Pet[] = JSON.parse(resp.body as string);
       const randomAvailablePet: Pet = randomItem(pets);
-      return { ...(stepData || {}), foundPet: randomAvailablePet, petId: randomAvailablePet.id }
+      return { ...stepData, foundPet: randomAvailablePet, petId: randomAvailablePet.id }
     });
   }
 
-  findPetById<T extends object>(stepData: T, petId: string): T & { foundPet: Pet } {
+  findPetById<T extends object>(petId: string, stepData?: T) {
     return group('FindById group', function () {
       const resp = requestsManager.petService.findPetById(petId);
       const foundPet: Pet = JSON.parse(resp.body as string);
-      return { ...(stepData || {} as T), foundPet };
+      return { ...stepData, foundPet, petId: foundPet.id };
     });
   }
 
-  updateFoundPet<T extends { foundPet: Pet }>(stepData: T): T {
-    const updates: Partial<Pet> = {
+  updateFoundPet<T extends object>(foundPetToUse: Pet, stepData: T,updates?: Partial<Pet>) {
+    const defaultUpdates: Partial<Pet> = {
       name: randomString(14),
       photoUrls: ["jpg1", "png2"]
     }
     return group('UpdatePet group', function () {
       const updatedPet: Pet = {
-        ...stepData.foundPet,
+        ...foundPetToUse,
+        ...defaultUpdates,
         ...updates
       };
       const resp = requestsManager.petService.updatePet(
         JSON.stringify(updatedPet)
       );
 
-      const updatedPetResult: Pet = JSON.parse(resp.body as string);
-      return { ...stepData, foundPet: updatedPetResult }
+      const foundPet: Pet = JSON.parse(resp.body as string);
+      return { ...stepData, foundPet }
     });
   }
 
-  addPetWithId<T extends object>(petId: string, stepData: T): T & { addedPet: Pet } {
+  addPet<T extends {petId?: string}>(petIdToUse: string ='', stepData: T= {} as T) {
+    const petId =  petIdToUse ?? stepData?.petId ?? randomString(6,'0123456789')
     const filledId: Partial<Pet> = {
       id: petId
     }
@@ -56,11 +58,11 @@ export class PetSteps {
         JSON.stringify(petToAdd)
       );
       const addedPet: Pet = JSON.parse(resp.body as string);
-      return { ...(stepData || {}), addedPet }
+      return { ...stepData, addedPet, petId }
     });
   }
 
-  updateFoundPetStatus<T extends { foundPet: Pet }>(stepData: T, status: "pending" | "sold" | "available"): T {
+  updateFoundPetStatus<T extends { foundPet: Pet }>(stepData: T, status: "pending" | "sold" | "available") {
 
     return group('UpdatePetStatus group', function () {
       const resp = requestsManager.petService.updatePetStatus(stepData.foundPet.id, stepData.foundPet.name, status);
@@ -84,19 +86,41 @@ export class PetSteps {
     });
   }
 
-  deleteFoundPet<T extends object>(stepData: T, petId: string, expectedStatus: number | number[] = 200): Omit<T, 'foundPet'> {
+  deletePetById<T extends object>( petId: string, stepData: T): Omit<T, 'foundPet'> {
     return group('DeletePet group', function () {
-      const resp = requestsManager.petService.deletePet(petId, undefined, expectedStatus);
+      const resp = requestsManager.petService.deletePet(petId);
 
       if (resp.status === 200) {
-        const verifyResp = requestsManager.petService.findPetById(petId, undefined, 404);
-        check(verifyResp, {
-          'DeletePet: pet not found after delete (404)': (r) => r.status === 404,
+        const deleteResponse = JSON.parse(resp.body as string);
+          check(deleteResponse, {
+          'DeletePet: response contains id': (r) => r.message === String(petId),
         });
       }
 
       const { foundPet, ...rest } = stepData as T & { foundPet?: Pet };
       return rest as Omit<T, 'foundPet'>
     });
+  }
+
+  setupPet<T extends { petId?: string }>(petIdToUse?: string, stepData: T = {} as T){
+      return group('SetupPet group', function () {
+
+            const petId =  petIdToUse ?? stepData?.petId ?? randomString(6,'0123456789')
+            const getResp = requestsManager.petService.findPetById(petId, undefined, [200, 404])
+
+            if (getResp.status === 200) {
+
+                const delResp = requestsManager.petService.deletePet(petId)
+
+                if (delResp.status === 200) {
+
+                    const deleteResponse = JSON.parse(delResp.body as string);
+                    check(deleteResponse, {
+                        'SetupPet: response contains id': (r) => r.message === String(petId),
+                    })
+                }
+            }
+            return { ...stepData, petId }
+        });
   }
 }

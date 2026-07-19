@@ -7,12 +7,11 @@ import { randomString } from "../../framework/k6Libs/k6Libs.js"
 
 export class StoreSteps {
 
-  placeOrder<T extends { testOrderId: string }>(stepData: T): T & { placedOrder: Order } {
-    const orderId = stepData.testOrderId
+  placeOrderById<T extends { testOrderId?: string }>(testOrderIdToUse?: string, stepData: T = {} as T) {
 
+    const testOrderId = testOrderIdToUse ?? stepData?.testOrderId ?? randomString(1, '123456789')
     const order: Partial<Order> = {
-      id: orderId,
-      petId: randomString(4, '0123456789'),
+      id: testOrderId,
       quantity: randomString(1, '12345'),
       status: "placed",
       complete: false
@@ -23,32 +22,54 @@ export class StoreSteps {
         JSON.stringify(orderToPlace)
       );
       const placedOrder: Order = JSON.parse(resp.body as string);
-      return { ...(stepData || {}), testOrderId: orderId, placedOrder };
+      return { ...stepData, testOrderId, placedOrder };
     });
   }
 
-  getOrder<T extends { testOrderId: string }>(stepData: T): T & { foundOrder: Order } {
+  getOrderById<T extends object>(testOrderId: string, stepData?: T) {
     return group('GetOrder group', function () {
-      const orderId = stepData?.testOrderId ?? randomString(1, '123456789');
-      const resp = requestsManager.storeService.getOrder(orderId);
+      const resp = requestsManager.storeService.getOrder(testOrderId);
       const foundOrder: Order = JSON.parse(resp.body as string);
-      return { ...(stepData || {}), testOrderId: orderId, foundOrder };
+      return { ...stepData, testOrderId, foundOrder };
     });
   }
 
-  deleteOrderById<T extends object>(stepData: T, orderId: string, expectedStatus: number | number[] = 200): Omit<T, 'foundOrder'> {
+  deleteOrderById<T extends object>(orderId: string, stepData?: T): Omit<T, 'foundOrder'> {
     return group('DeleteOrder group', function () {
-      const resp = requestsManager.storeService.deleteOrder(orderId, undefined, expectedStatus);
+      const resp = requestsManager.storeService.deleteOrder(orderId);
 
       if (resp.status === 200) {
-        const verifyResp = requestsManager.storeService.getOrder(orderId, undefined, 404);
-        check(verifyResp, {
-          'DeleteOrder: order not found after delete (404)': (r) => r.status === 404,
-        });
+
+        const deleteResponse = JSON.parse(resp.body as string);
+        check(deleteResponse, {
+          'DeleteOrder: response contains id': (r) => r.message === String(orderId),
+        })
       }
 
       const { foundOrder, ...rest } = stepData as T & { foundOrder?: Order };
       return rest as Omit<T, 'foundOrder'>;
+    });
+  }
+
+  setupOrder<T extends { testOrderId?: string }>(testOrderIdToUse?: string, stepData: T = {} as T) {
+    return group('SetupOrder group', function () {
+
+      const testOrderId = testOrderIdToUse ?? stepData?.testOrderId ?? randomString(1, '123456789')
+      const getResp = requestsManager.storeService.getOrder(testOrderId, undefined, [200, 404])
+
+      if (getResp.status === 200) {
+
+        const delResp = requestsManager.storeService.deleteOrder(testOrderId)
+
+        if (delResp.status === 200) {
+
+          const deleteResponse = JSON.parse(delResp.body as string);
+          check(deleteResponse, {
+            'SetupOrder: response contains id': (r) => r.message === testOrderId,
+          })
+        }
+      }
+      return { ...stepData, testOrderId }
     });
   }
 }

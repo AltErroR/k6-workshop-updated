@@ -1,3 +1,6 @@
+//@ts-ignore
+import { randomString } from "../../framework/k6Libs/k6Libs.js"
+
 export interface Order {
   id: string;
   petId: string;
@@ -8,8 +11,8 @@ export interface Order {
 }
 
 export const DEFAULT_ORDER: Order = {
-  id: "0",
-  petId: "0",
+  id: randomString(1,'123456789'),
+  petId: randomString(6,'0123456789'),
   quantity: "1",
   status: "placed",
   complete: false

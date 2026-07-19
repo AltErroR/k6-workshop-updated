@@ -6,30 +6,31 @@ import { randomString } from "../../../framework/k6Libs/k6Libs.js"
 
 
 export class UpdateUserByUsername {
-    execute<T extends { username: string }>(stepData: T, foundUserForUpdate: User): T & { updatedUser: User } {
-        const updates: Partial<User> = {
-            username: stepData.username,
+    execute<T extends object>(username: string, stepData: T, foundUserForUpdate: User, updates?: Partial<User>) {
+        const defaultUpdates: Partial<User> = {
+            username: username,
             firstName: randomString(5),
             lastName: randomString(9),
             email: randomString(5) + randomString(2, '0123456789') + "@gmail.com"
         }
 
         return group('UpdateUser group', function () {
-            const userToUpdate: User = {
+            const updatedUser: User = {
                 ...foundUserForUpdate,
+                ...defaultUpdates,
                 ...updates
             };
             const resp = requestsManager.userService.updateUser(
-                stepData.username,
-                JSON.stringify(userToUpdate));
+                username,
+                JSON.stringify(updatedUser));
 
             const responseBody = JSON.parse(resp.body as string);
 
             check(responseBody, {
-                'UpdateUser: response message matches user ID': (r) => r.message && r.message === userToUpdate.id.toString(),
+                'UpdateUser: response message matches user ID': (r) => r.message && r.message === updatedUser.id.toString(),
             });
 
-            return { ...stepData, updatedUser: userToUpdate }
+            return { ...stepData, updatedUser }
         });
     }
 }

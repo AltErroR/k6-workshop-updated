@@ -33,13 +33,13 @@ export class PetService extends BaseRequestsService {
         return this.post(`/v2/pet/${id}`, `name=${name}&status=${status}`, formParams)
     }
 
-    deletePet(id: string, params?: Params, expectedStatus: number | number[] = 200) {
+    deletePet(id: string, params?: Params) {
         return this.delete(`/v2/pet/${id}`, null, {
             ...params,
             headers: {
                 ...params?.headers,
                 'api_key': API_KEY
             }
-        }, expectedStatus)
+        })
     }
 }

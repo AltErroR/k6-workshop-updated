@@ -9,8 +9,8 @@ export class UserService extends BaseRequestsService {
         return this.post(`/v2/user`, body, params)
     }
 
-    deleteUser(username: string, params?: Params, expectedStatus: number | number[] = 200) {
-        return this.delete(`/v2/user/${username}`, null, params, expectedStatus)
+    deleteUser(username: string, params?: Params) {
+        return this.delete(`/v2/user/${username}`, null, params)
     }
 
     getUserByUsername(username: string, params?: Params, expectedStatus: number | number[] = 200) {

@@ -1,3 +1,6 @@
+//@ts-ignore
+import { randomString } from "../../framework/k6Libs/k6Libs.js"
+
 export interface Pet {
   id: string;
   name: string;
@@ -14,7 +17,7 @@ export interface Pet {
 }
 
 export const DEFAULT_PET: Pet = {
-  id: "0",
+  id: randomString(6,'0123456789'),
   name: "string",
   photoUrls: ["string"],
   status: "available",

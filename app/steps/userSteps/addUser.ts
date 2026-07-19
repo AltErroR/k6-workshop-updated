@@ -8,10 +8,10 @@ import { randomString } from "../../../framework/k6Libs/k6Libs.js"
 
 export class AddUser {
 
-    execute<T extends { username: string }>(stepData: T): T & { addedUser: User } {
-        const username = stepData?.username ?? randomString(10,);
+    execute<T extends {username?: string}>(usernameToUse: string ='', stepData: T = {} as T){
+        const username =  usernameToUse ?? stepData?.username ?? randomString(10,)
         const userData: Partial<User> = {
-            username: username
+            username: usernameToUse
         }
         return group('AddUser group', function () {
             const userToAdd: User = entitiesManager.createUser(userData);
@@ -26,7 +26,7 @@ export class AddUser {
                 'AddUser: user created with correct username': (u) => u.username === username,
             });
 
-            return { ...(stepData || {}), username, addedUser: userToAdd };
+            return { ...stepData, username, addedUser: userToAdd };
         });
     }
 }
