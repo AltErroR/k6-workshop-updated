@@ -1,6 +1,6 @@
 import http, { Params, RequestBody } from "k6/http"
 import { BASE_URL } from "../../config/k6Config.ts"
-import { utilitiesManager } from "../utilitiesManager.ts";
+import { createRequestName, processResponse } from "../utils.ts";
 
 
 export class BaseRequestsService {
@@ -15,27 +15,31 @@ export class BaseRequestsService {
         this.baseUrl = baseUrl
     }
 
-    protected get(path: string, params?: Params, expectedStatus: number | number[] = 200) {
-        const resp = http.get(`${this.baseUrl}${path}`, this.withDefaultHeaders(params))
-        utilitiesManager.log(resp, expectedStatus)
+    protected get(path: string, params?: Params) {
+        const namedParams = createRequestName(params, undefined, 'GET [BaseRequestsService - name not set]')
+        const resp = http.get(`${this.baseUrl}${path}`, this.withDefaultHeaders(namedParams))
+        processResponse(resp, namedParams)
         return resp
     }
 
     protected post(path: string, body: RequestBody | null, params?: Params) {
-        const resp = http.post(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
-        utilitiesManager.log(resp, 200)
+        const namedParams = createRequestName(params, undefined, 'POST [BaseRequestsService - name not set]')
+        const resp = http.post(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(namedParams))
+        processResponse(resp, namedParams)
         return resp
     }
 
     protected put(path: string, body: RequestBody | null, params?: Params) {
-        const resp = http.put(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
-        utilitiesManager.log(resp, 200)
+        const namedParams = createRequestName(params, undefined, 'PUT [BaseRequestsService - name not set]')
+        const resp = http.put(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(namedParams))
+        processResponse(resp, namedParams)
         return resp
     }
 
     protected delete(path: string, body: RequestBody | null, params?: Params) {
-        const resp = http.del(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(params))
-        utilitiesManager.log(resp, 200)
+        const namedParams = createRequestName(params, undefined, 'DELETE [BaseRequestsService - name not set]')
+        const resp = http.del(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(namedParams))
+        processResponse(resp, namedParams)
         return resp
     }
 
@@ -45,7 +49,7 @@ export class BaseRequestsService {
             ...params,
             headers: {
                 ...this.defaultParams.headers,
-                ...params?.headers  
+                ...params?.headers
             }
         };
     }

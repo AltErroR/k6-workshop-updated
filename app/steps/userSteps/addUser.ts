@@ -8,7 +8,7 @@ import { randomString } from "../../../framework/k6Libs/k6Libs.js"
 
 export class AddUser {
 
-    execute<T extends {username?: string}>(usernameToUse: string, stepData: T = {} as T){
+    execute<T extends {username?: string}>(usernameToUse?: string, stepData: T = {} as T){
         const username =  usernameToUse ?? stepData?.username ?? randomString(10)
         const userData: Partial<User> = {
             username: usernameToUse

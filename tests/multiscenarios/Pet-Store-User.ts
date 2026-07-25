@@ -31,20 +31,20 @@ export const options = {
 };
 
 export function setup() {
-  const setupData1 = petSetup()
-  const setupData2 = storeSetup()
-  const setupData3 = userSetup()
-  return {setupData1, setupData2,setupData3}
+  const setupPetData = petSetup()
+  const setupStoreData = storeSetup()
+  const setupUserData = userSetup()
+  return {setupPetData, setupUserData,setupStoreData}
 }
 
-export function runPetScenario(setupData: { setupData1: { petId: string } }) {
-  petScenario(setupData.setupData1);
+export function runPetScenario(setupData: { setupPetData: { petId: string } }) {
+  petScenario(setupData.setupPetData);
 }
 
-export function runStoreScenario(setupData: { setupData2: { testOrderId: string } }) {
-  storeScenario(setupData.setupData2);
+export function runStoreScenario(setupData: { setupStoreData: { testOrderId: string } }) {
+  storeScenario(setupData.setupStoreData);
 }
 
-export function runUserScenario(setupData: { setupData3: { username: string } }) {
-  userScenario(setupData.setupData3);
+export function runUserScenario(setupData: { setupUserData: { username: string } }) {
+  userScenario(setupData.setupUserData);
 }

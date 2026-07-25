@@ -1,4 +1,6 @@
 import { group, check } from "k6";
+//@ts-ignore
+import { expect } from 'https://jslib.k6.io/k6-testing/0.6.1/index.js';
 import { requestsManager } from "../requestsManager.ts";
 import { Order } from "../entities/order.ts";
 import { entitiesManager } from "../entitiesManager.ts";
@@ -55,19 +57,12 @@ export class StoreSteps {
     return group('SetupOrder group', function () {
 
       const testOrderId = testOrderIdToUse ?? stepData?.testOrderId ?? randomString(1, '123456789')
-      const getResp = requestsManager.storeService.getOrder(testOrderId, undefined, [200, 404])
+      const getResp = requestsManager.storeService.getOrder(testOrderId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
 
       if (getResp.status === 200) {
 
         const delResp = requestsManager.storeService.deleteOrder(testOrderId)
-
-        if (delResp.status === 200) {
-
-          const deleteResponse = JSON.parse(delResp.body as string);
-          check(deleteResponse, {
-            'SetupOrder: response contains id': (r) => r.message === testOrderId,
-          })
-        }
+        expect(delResp.status).toBe(200)
       }
       return { ...stepData, testOrderId }
     });

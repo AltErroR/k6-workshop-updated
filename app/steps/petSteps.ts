@@ -1,5 +1,7 @@
 import { group, check } from "k6";
 //@ts-ignore
+import { expect } from 'https://jslib.k6.io/k6-testing/0.6.1/index.js';
+//@ts-ignore
 import { randomItem } from "../../framework/k6Libs/k6Libs.js"
 import { requestsManager } from "../requestsManager.ts";
 import { Pet } from "../entities/pet.ts"
@@ -47,7 +49,7 @@ export class PetSteps {
     });
   }
 
-  addPet<T extends {petId?: string}>(petIdToUse: string ='', stepData: T= {} as T) {
+  addPet<T extends {petId?: string}>(petIdToUse?: string, stepData: T= {} as T) {
     const petId =  petIdToUse ?? stepData?.petId ?? randomString(6,'0123456789')
     const filledId: Partial<Pet> = {
       id: petId
@@ -106,19 +108,12 @@ export class PetSteps {
       return group('SetupPet group', function () {
 
             const petId =  petIdToUse ?? stepData?.petId ?? randomString(6,'0123456789')
-            const getResp = requestsManager.petService.findPetById(petId, undefined, [200, 404])
+            const getResp = requestsManager.petService.findPetById(petId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
 
             if (getResp.status === 200) {
 
                 const delResp = requestsManager.petService.deletePet(petId)
-
-                if (delResp.status === 200) {
-
-                    const deleteResponse = JSON.parse(delResp.body as string);
-                    check(deleteResponse, {
-                        'SetupPet: response contains id': (r) => r.message === String(petId),
-                    })
-                }
+                expect(delResp.status).toBe(200)
             }
             return { ...stepData, petId }
         });
