@@ -9,16 +9,20 @@ import { randomString } from "../../framework/k6Libs/k6Libs.js"
 
 export class StoreSteps {
 
-  placeOrderById<T extends { testOrderId?: string }>(testOrderIdToUse?: string, stepData: T = {} as T) {
-
-    const testOrderId = testOrderIdToUse ?? stepData?.testOrderId ?? randomString(1, '123456789')
+  placeOrderById<T extends { testOrderId?: string }>(stepData?: T): T & { testOrderId: string; placedOrder: Order }
+  placeOrderById<T extends { testOrderId?: string }>(orderId: string, stepData?: T): T & { testOrderId: string; placedOrder: Order }
+  placeOrderById<T extends { testOrderId?: string }>(testOrderIdOrData?: string | T, incomingData: T = {} as T) {
+    const testOrderId: string = typeof testOrderIdOrData === 'string'
+      ? testOrderIdOrData
+      : (testOrderIdOrData as T)?.testOrderId ?? randomString(1, '123456789')
+    const stepData: T = (typeof testOrderIdOrData === 'string' ? incomingData : testOrderIdOrData ?? {} as T) as T
     const order: Partial<Order> = {
       id: testOrderId,
       quantity: randomString(1, '12345'),
       status: "placed",
       complete: false
     }
-    return group('PlaceOrder group', function () {
+    return group('Place order group', function () {
       const orderToPlace: Order = entitiesManager.createOrder(order);
       const resp = requestsManager.storeService.placeOrder(
         JSON.stringify(orderToPlace)
@@ -29,7 +33,7 @@ export class StoreSteps {
   }
 
   getOrderById<T extends object>(testOrderId: string, stepData?: T) {
-    return group('GetOrder group', function () {
+    return group('Get order by ID group', function () {
       const resp = requestsManager.storeService.getOrder(testOrderId);
       const foundOrder: Order = JSON.parse(resp.body as string);
       return { ...stepData, testOrderId, foundOrder };
@@ -37,7 +41,7 @@ export class StoreSteps {
   }
 
   deleteOrderById<T extends object>(orderId: string, stepData?: T): Omit<T, 'foundOrder'> {
-    return group('DeleteOrder group', function () {
+    return group('Delete order by ID group', function () {
       const resp = requestsManager.storeService.deleteOrder(orderId);
 
       if (resp.status === 200) {
@@ -53,15 +57,18 @@ export class StoreSteps {
     });
   }
 
-  setupOrder<T extends { testOrderId?: string }>(testOrderIdToUse?: string, stepData: T = {} as T) {
-    return group('SetupOrder group', function () {
-
-      const testOrderId = testOrderIdToUse ?? stepData?.testOrderId ?? randomString(1, '123456789')
+  setupOrder<T extends { testOrderId?: string }>(stepData?: T): T & { testOrderId: string }
+  setupOrder<T extends { testOrderId?: string }>(orderId: string, stepData?: T): T & { testOrderId: string }
+  setupOrder<T extends { testOrderId?: string }>(testOrderIdOrData?: string | T, incomingData: T = {} as T) {
+    return group('Setup order group', function () {
+      const testOrderId: string = typeof testOrderIdOrData === 'string'
+        ? testOrderIdOrData
+        : (testOrderIdOrData as T)?.testOrderId ?? randomString(1, '123456789')
+      const stepData: T = (typeof testOrderIdOrData === 'string' ? incomingData : testOrderIdOrData ?? {} as T) as T
       const getResp = requestsManager.storeService.getOrder(testOrderId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
 
       if (getResp.status === 200) {
-
-        const delResp = requestsManager.storeService.deleteOrder(testOrderId)
+        const delResp = requestsManager.storeService.deleteOrder(testOrderId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
         expect(delResp.status).toBe(200)
       }
       return { ...stepData, testOrderId }

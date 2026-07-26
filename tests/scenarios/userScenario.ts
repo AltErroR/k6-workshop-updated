@@ -8,9 +8,9 @@ export function setup() {
 
 export default function (setupData: { username: string }) {
 
-  const stepData1 = stepsManager.addUser.execute(setupData.username)
-  const stepData2 = stepsManager.getUserByUsername.execute(stepData1.username,stepData1)
-  const stepData3 = stepsManager.updateUserByUsername.execute(stepData2.username,stepData2, stepData2.foundUser);
-  const stepData4 = stepsManager.deleteUserByUsername.execute(stepData3.username,stepData3);
+  const addedUserData = stepsManager.addUser.execute(setupData.username)
+  const foundUserData = stepsManager.getUserByUsername.execute(addedUserData.username, addedUserData)
+  const updatedUserData = stepsManager.updateUserByUsername.execute(foundUserData.username, foundUserData, foundUserData.foundUser);
+  const deletedUserData = stepsManager.deleteUserByUsername.execute(updatedUserData.username, updatedUserData);
 
 }

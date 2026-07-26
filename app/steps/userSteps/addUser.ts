@@ -8,16 +8,17 @@ import { randomString } from "../../../framework/k6Libs/k6Libs.js"
 
 export class AddUser {
 
-    execute<T extends {username?: string}>(usernameToUse?: string, stepData: T = {} as T){
-        const username =  usernameToUse ?? stepData?.username ?? randomString(10)
-        const userData: Partial<User> = {
-            username: usernameToUse
-        }
-        return group('AddUser group', function () {
+    execute<T extends { username?: string }>(stepData?: T): T & { username: string; addedUser: User }
+    execute<T extends { username?: string }>(username: string, stepData?: T): T & { username: string; addedUser: User }
+    execute<T extends { username?: string }>(usernameOrData?: string | T, incomingData: T = {} as T) {
+        const username: string = typeof usernameOrData === 'string'
+            ? usernameOrData
+            : (usernameOrData as T)?.username ?? randomString(10)
+        const stepData: T = (typeof usernameOrData === 'string' ? incomingData : usernameOrData ?? {} as T) as T
+        const userData: Partial<User> = { username }
+        return group('Add user group', function () {
             const userToAdd: User = entitiesManager.createUser(userData);
-            const resp = requestsManager.userService.addUser(
-                JSON.stringify(userToAdd)
-            );
+            requestsManager.userService.addUser(JSON.stringify(userToAdd));
 
             const verifyResp = requestsManager.userService.getUserByUsername(username);
             const foundUser: User = JSON.parse(verifyResp.body as string);

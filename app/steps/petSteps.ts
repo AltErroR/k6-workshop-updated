@@ -13,7 +13,7 @@ export class PetSteps {
 
 
   getAvailablePet<T extends object>(stepData?: T) {
-    return group('Available group', function () {
+    return group('Get available pet group', function () {
       const resp = requestsManager.petService.findPetByStatus("available");
       const pets: Pet[] = JSON.parse(resp.body as string);
       const randomAvailablePet: Pet = randomItem(pets);
@@ -22,21 +22,21 @@ export class PetSteps {
   }
 
   findPetById<T extends object>(petId: string, stepData?: T) {
-    return group('FindById group', function () {
+    return group('Find pet by ID group', function () {
       const resp = requestsManager.petService.findPetById(petId);
       const foundPet: Pet = JSON.parse(resp.body as string);
       return { ...stepData, foundPet, petId: foundPet.id };
     });
   }
 
-  updateFoundPet<T extends object>(foundPetToUse: Pet, stepData: T,updates?: Partial<Pet>) {
+  updatePetByData<T extends object>(petData: Pet, stepData: T, updates?: Partial<Pet>) {
     const defaultUpdates: Partial<Pet> = {
       name: randomString(14),
       photoUrls: ["jpg1", "png2"]
     }
-    return group('UpdatePet group', function () {
+    return group('Update pet group', function () {
       const updatedPet: Pet = {
-        ...foundPetToUse,
+        ...petData,
         ...defaultUpdates,
         ...updates
       };
@@ -49,12 +49,15 @@ export class PetSteps {
     });
   }
 
-  addPet<T extends {petId?: string}>(petIdToUse?: string, stepData: T= {} as T) {
-    const petId =  petIdToUse ?? stepData?.petId ?? randomString(6,'0123456789')
-    const filledId: Partial<Pet> = {
-      id: petId
-    }
-    return group('AddPet group', function () {
+  addPet<T extends { petId?: string }>(stepData?: T): T & { addedPet: Pet; petId: string }
+  addPet<T extends { petId?: string }>(petId: string, stepData?: T): T & { addedPet: Pet; petId: string }
+  addPet<T extends { petId?: string }>(petIdOrData?: string | T, incomingData: T = {} as T) {
+    const petId: string = typeof petIdOrData === 'string'
+      ? petIdOrData
+      : (petIdOrData as T)?.petId ?? randomString(6, '0123456789')
+    const stepData: T = (typeof petIdOrData === 'string' ? incomingData : petIdOrData ?? {} as T) as T
+    const filledId: Partial<Pet> = { id: petId }
+    return group('Add pet group', function () {
       const petToAdd: Pet = entitiesManager.createPet(filledId);
       const resp = requestsManager.petService.addPet(
         JSON.stringify(petToAdd)
@@ -64,9 +67,8 @@ export class PetSteps {
     });
   }
 
-  updateFoundPetStatus<T extends { foundPet: Pet }>(stepData: T, status: "pending" | "sold" | "available") {
-
-    return group('UpdatePetStatus group', function () {
+  updatePetStatus<T extends { foundPet: Pet }>(stepData: T, status: "pending" | "sold" | "available") {
+    return group('Update pet status group', function () {
       const resp = requestsManager.petService.updatePetStatus(stepData.foundPet.id, stepData.foundPet.name, status);
       const respMessage = JSON.parse(resp.body as string);
 
@@ -89,7 +91,7 @@ export class PetSteps {
   }
 
   deletePetById<T extends object>( petId: string, stepData: T): Omit<T, 'foundPet'> {
-    return group('DeletePet group', function () {
+    return group('Delete pet by ID group', function () {
       const resp = requestsManager.petService.deletePet(petId);
 
       if (resp.status === 200) {
@@ -104,18 +106,21 @@ export class PetSteps {
     });
   }
 
-  setupPet<T extends { petId?: string }>(petIdToUse?: string, stepData: T = {} as T){
-      return group('SetupPet group', function () {
+  setupPet<T extends { petId?: string }>(stepData?: T): T & { petId: string }
+  setupPet<T extends { petId?: string }>(petId: string, stepData?: T): T & { petId: string }
+  setupPet<T extends { petId?: string }>(petIdOrData?: string | T, incomingData: T = {} as T) {
+    return group('Setup pet group', function () {
+      const petId: string = typeof petIdOrData === 'string'
+        ? petIdOrData
+        : (petIdOrData as T)?.petId ?? randomString(6, '0123456789')
+      const stepData: T = (typeof petIdOrData === 'string' ? incomingData : petIdOrData ?? {} as T) as T
+      const getResp = requestsManager.petService.findPetById(petId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
 
-            const petId =  petIdToUse ?? stepData?.petId ?? randomString(6,'0123456789')
-            const getResp = requestsManager.petService.findPetById(petId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
-
-            if (getResp.status === 200) {
-
-                const delResp = requestsManager.petService.deletePet(petId)
-                expect(delResp.status).toBe(200)
-            }
-            return { ...stepData, petId }
-        });
+      if (getResp.status === 200) {
+        const delResp = requestsManager.petService.deletePet(petId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
+        expect(delResp.status).toBe(200)
+      }
+      return { ...stepData, petId }
+    });
   }
 }

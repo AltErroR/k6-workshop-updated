@@ -7,9 +7,8 @@ export function setup() {
 
 export default function (setupData: { testOrderId: string }) {
 
-
-  const stepData1 = stepsManager.storeSteps.placeOrderById(setupData.testOrderId)
-  const stepData2 = stepsManager.storeSteps.getOrderById(stepData1.testOrderId,stepData1);
-  const stepData3 = stepsManager.storeSteps.deleteOrderById(stepData2.foundOrder.id, stepData2);
+  const placedOrderData = stepsManager.storeSteps.placeOrderById(setupData.testOrderId)
+  const foundOrderData = stepsManager.storeSteps.getOrderById(placedOrderData.testOrderId, placedOrderData);
+  const deletedOrderData = stepsManager.storeSteps.deleteOrderById(foundOrderData.foundOrder.id, foundOrderData);
 
 }

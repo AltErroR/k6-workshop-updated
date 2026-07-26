@@ -6,7 +6,7 @@ import { randomString } from "../../../framework/k6Libs/k6Libs.js"
 
 
 export class UpdateUserByUsername {
-    execute<T extends object>(username: string, stepData: T, foundUserForUpdate: User, updates?: Partial<User>) {
+    execute<T extends object>(username: string, stepData: T, userData: User, updates?: Partial<User>) {
         const defaultUpdates: Partial<User> = {
             username: username,
             firstName: randomString(5),
@@ -14,9 +14,9 @@ export class UpdateUserByUsername {
             email: randomString(5) + randomString(2, '0123456789') + "@gmail.com"
         }
 
-        return group('UpdateUser group', function () {
+        return group('Update user group', function () {
             const updatedUser: User = {
-                ...foundUserForUpdate,
+                ...userData,
                 ...defaultUpdates,
                 ...updates
             };

@@ -7,10 +7,9 @@ export function setup() {
 
 
 export default function (setupData: { petId: string }) {
-  const stepData1 = stepsManager.petSteps.addPet(setupData.petId, setupData)
-  const stepData2 = stepsManager.petSteps.findPetById(stepData1.petId, stepData1)
-  const stepData3 = stepsManager.petSteps.updateFoundPet(stepData2.foundPet,stepData2);
-  const stepData4 = stepsManager.petSteps.updateFoundPetStatus(stepData3, "sold")
-  const stepData5 = stepsManager.petSteps.deletePetById(stepData4.petId,stepData4)
-
+  const addedPetData = stepsManager.petSteps.addPet(setupData.petId, setupData)
+  const foundPetData = stepsManager.petSteps.findPetById(addedPetData.petId, addedPetData)
+  const updatedPetData = stepsManager.petSteps.updatePetByData(foundPetData.foundPet, foundPetData);
+  const petWithStatusData = stepsManager.petSteps.updatePetStatus(updatedPetData, "sold")
+  const deletedPetData = stepsManager.petSteps.deletePetById(petWithStatusData.petId, petWithStatusData)
 }

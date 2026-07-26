@@ -1,6 +1,6 @@
 import http, { Params, RequestBody } from "k6/http"
 import { BASE_URL } from "../../config/k6Config.ts"
-import { createRequestName, processResponse } from "../utils.ts";
+import { processResponse } from "../utils.ts";
 
 
 export class BaseRequestsService {
@@ -15,43 +15,43 @@ export class BaseRequestsService {
         this.baseUrl = baseUrl
     }
 
-    protected get(path: string, params?: Params) {
-        const namedParams = createRequestName(params, undefined, 'GET [BaseRequestsService - name not set]')
-        const resp = http.get(`${this.baseUrl}${path}`, this.withDefaultHeaders(namedParams))
-        processResponse(resp, namedParams)
+    protected get(path: string, params?: Params & Record<string, any>) {
+        const finalParams = this.withDefaultHeaders(params, 'GET [BaseRequestsService - name not set]')
+        const resp = http.get(`${this.baseUrl}${path}`, finalParams)
+        processResponse(resp, finalParams)
         return resp
     }
 
-    protected post(path: string, body: RequestBody | null, params?: Params) {
-        const namedParams = createRequestName(params, undefined, 'POST [BaseRequestsService - name not set]')
-        const resp = http.post(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(namedParams))
-        processResponse(resp, namedParams)
+    protected post(path: string, body: RequestBody | null, params?: Params & Record<string, any>) {
+        const finalParams = this.withDefaultHeaders(params, 'POST [BaseRequestsService - name not set]')
+        const resp = http.post(`${this.baseUrl}${path}`, body, finalParams)
+        processResponse(resp, finalParams)
         return resp
     }
 
-    protected put(path: string, body: RequestBody | null, params?: Params) {
-        const namedParams = createRequestName(params, undefined, 'PUT [BaseRequestsService - name not set]')
-        const resp = http.put(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(namedParams))
-        processResponse(resp, namedParams)
+    protected put(path: string, body: RequestBody | null, params?: Params & Record<string, any>) {
+        const finalParams = this.withDefaultHeaders(params, 'PUT [BaseRequestsService - name not set]')
+        const resp = http.put(`${this.baseUrl}${path}`, body, finalParams)
+        processResponse(resp, finalParams)
         return resp
     }
 
-    protected delete(path: string, body: RequestBody | null, params?: Params) {
-        const namedParams = createRequestName(params, undefined, 'DELETE [BaseRequestsService - name not set]')
-        const resp = http.del(`${this.baseUrl}${path}`, body, this.withDefaultHeaders(namedParams))
-        processResponse(resp, namedParams)
+    protected delete(path: string, body: RequestBody | null, params?: Params & Record<string, any>) {
+        const finalParams = this.withDefaultHeaders(params, 'DELETE [BaseRequestsService - name not set]')
+        const resp = http.del(`${this.baseUrl}${path}`, body, finalParams)
+        processResponse(resp, finalParams)
         return resp
     }
 
-    private withDefaultHeaders(params?: Params): Params {
+    private withDefaultHeaders(params?: Params & Record<string, any>, fallbackName?: string): Params {
+        const resolvedName = params?.requestName ?? params?.tags?.name ?? fallbackName
+        const { requestName, ...rest } = params || {}
         return {
             ...this.defaultParams,
-            ...params,
-            headers: {
-                ...this.defaultParams.headers,
-                ...params?.headers
-            }
-        };
+            ...rest,
+            headers: { ...this.defaultParams.headers, ...rest?.headers },
+            tags: { ...rest?.tags, name: resolvedName }
+        }
     }
 
 }

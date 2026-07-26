@@ -1,17 +1,6 @@
 import { Params, RefinedResponse } from "k6/http";
 import { check } from "k6";
 
-export function createRequestName(params?: Params & Record<string, any>, name?: string, fallbackName?: string): Params {
-  const p = params as any;
-  const resolvedName = name ?? p?.requestName ?? p?.tags?.name ?? fallbackName;
-  const { requestName, ...rest } = p || {};
-
-  return {
-    ...rest,
-    tags: { ...rest?.tags, name: resolvedName }
-  };
-}
-
 export function validateStatus(resp: RefinedResponse<"text" | "binary" | "none">, params?: Params): void {
   if ((params as any)?.enabledStatusCheck === false) return;
 
