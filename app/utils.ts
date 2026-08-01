@@ -1,29 +1,58 @@
-import { Params, RefinedResponse } from "k6/http";
+import { RefinedResponse } from "k6/http";
 import { check } from "k6";
+import { ExtendedParams, EnvironmentConfig } from "./types.ts";
+import * as envConfigs from "../config/envConfigs.ts";
 
-export function validateStatus(resp: RefinedResponse<"text" | "binary" | "none">, params?: Params): void {
-  if ((params as any)?.enabledStatusCheck === false) return;
+export function validateStatus(resp: RefinedResponse<"text" | "binary" | "none">, params?: ExtendedParams): void {
+  if (params?.enabledStatusCheck === false) return;
 
-  const p = params as any;
-  const name = p?.tags?.name ?? p?.requestName;
+  const name = params?.tags?.name ?? params?.requestName;
 
   check(resp, {
     [`${name}: status is 200 - 399, got ${resp.status}`]: (r) => r.status >= 200 && r.status < 399
   });
 }
 
-export function validateResponseBody(resp: RefinedResponse<"text" | "binary" | "none">, params?: Params): void {
-  if ((params as any)?.enabledBodyCheck === false) return;
+export function validateResponseBody(resp: RefinedResponse<"text" | "binary" | "none">, params?: ExtendedParams): void {
+  if (params?.enabledBodyCheck === false) return;
 
-  const p = params as any;
-  const name = p?.tags?.name ?? p?.requestName;
+  const name = params?.tags?.name ?? params?.requestName;
 
   check(resp, {
     [`${name}: body is not empty`]: (r) => !!r.body && typeof r.body === 'string'
   });
 }
 
-export function processResponse(resp: RefinedResponse<"text" | "binary" | "none">, params?: Params): void {
+export function processResponse(resp: RefinedResponse<"text" | "binary" | "none">, params?: ExtendedParams): void {
   validateStatus(resp, params);
   validateResponseBody(resp, params);
+}
+
+export function resolveRequestParams(defaultParams: ExtendedParams, params: ExtendedParams | undefined, method: string, path: string): ExtendedParams {
+  const resolvedName = params?.requestName ?? params?.tags?.name ?? `${method} ${path}`
+  const { requestName, queryParams, ...rest } = params || {}
+  return {
+    ...defaultParams,
+    ...rest,
+    headers: { ...defaultParams.headers, ...rest?.headers },
+    tags: { ...rest?.tags, name: resolvedName }
+  }
+}
+
+function resolveEnv(configs: Record<string, EnvironmentConfig>): EnvironmentConfig {
+  // @ts-ignore
+  const envName: string = __ENV.ENV
+  const env = configs[envName]
+  if (!env) throw new Error(`Unknown ENV: "${envName}". Valid: ${Object.keys(configs).join(', ')}`)
+  return env
+}
+
+export const currentEnv: EnvironmentConfig = resolveEnv(envConfigs as Record<string, EnvironmentConfig>)
+
+export function buildUrl(baseUrl: string, path: string, queryParams?: Record<string, string | number | boolean>): string {
+  if (!queryParams || Object.keys(queryParams).length === 0) return `${baseUrl}${path}`
+  const query = Object.entries(queryParams)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join('&')
+  return `${baseUrl}${path}?${query}`
 }

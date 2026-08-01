@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "k6 run tests/test.ts -e K6_HTTP_DEBUG=true"
+    "test": "k6 run --env ENV=stage tests/test.ts -e K6_HTTP_DEBUG=true"
   },
   "keywords": [],
   "author": "",

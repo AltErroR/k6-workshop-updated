@@ -1,30 +1,34 @@
-import { Params, RequestBody } from "k6/http";
+import { RequestBody } from "k6/http";
 import { BaseRequestsService } from "./baseRequestsService.ts";
-import { API_KEY } from "../../config/k6Config.ts"
+import { ExtendedParams } from "../types.ts";
 
 
 export class PetService extends BaseRequestsService {
 
-    findPetByStatus(status: "available" | "sold" | "pending", params?: Params) {
-        return this.get(`/v2/pet/findByStatus?status=${status}`, { ...params, requestName: 'GET /v2/pet/findByStatus' })
-    }
-
-    findPetById(id: string, params?: Params) {
-        return this.get(`/v2/pet/${id}`, { ...params, requestName: 'GET /v2/pet/{id}' })
-    }
-
-    addPet(body: RequestBody, params?: Params) {
-        return this.post(`/v2/pet`, body, { ...params, requestName: 'POST /v2/pet' })
-    }
-
-    updatePet(body: RequestBody, params?: Params) {
-        return this.put(`/v2/pet`, body, { ...params, requestName: 'PUT /v2/pet' })
-    }
-
-    updatePetStatus(id: string, name: string, status: "available" | "sold" | "pending", params?: Params) {
-        return this.post(`/v2/pet/${id}`, `name=${name}&status=${status}`, {
+    findPetByStatus(status: "available" | "sold" | "pending", params?: ExtendedParams) {
+        return this.get(`/v2/pet/findByStatus`, {
+            requestName: 'GET /v2/pet/findByStatus',
             ...params,
+            queryParams: { ...params?.queryParams, status }
+        })
+    }
+
+    findPetById(id: string, params?: ExtendedParams) {
+        return this.get(`/v2/pet/${id}`, { requestName: 'GET /v2/pet/{id}', ...params })
+    }
+
+    addPet(body: RequestBody, params?: ExtendedParams) {
+        return this.post(`/v2/pet`, body, params)
+    }
+
+    updatePet(body: RequestBody, params?: ExtendedParams) {
+        return this.put(`/v2/pet`, body, params)
+    }
+
+    updatePetStatus(id: string, name: string, status: "available" | "sold" | "pending", params?: ExtendedParams) {
+        return this.post(`/v2/pet/${id}`, `name=${name}&status=${status}`, {
             requestName: 'POST /v2/pet/{id}',
+            ...params,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 ...params?.headers
@@ -32,13 +36,13 @@ export class PetService extends BaseRequestsService {
         })
     }
 
-    deletePet(id: string, params?: Params) {
+    deletePet(id: string, params?: ExtendedParams) {
         return this.delete(`/v2/pet/${id}`, null, {
-            ...params,
             requestName: 'DELETE /v2/pet/{id}',
+            ...params,
             headers: {
                 ...params?.headers,
-                'api_key': API_KEY
+                'api_key': this.env.secrets.apiKey
             }
         })
     }
