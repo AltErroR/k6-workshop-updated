@@ -16,7 +16,7 @@ export interface Pet {
   status: "available" | "pending" | "sold";
 }
 
-export const DEFAULT_PET: Pet = {
+export const createDefaultPet = (): Pet => ({
   id: randomString(6,'0123456789'),
   name: "string",
   photoUrls: ["string"],
@@ -29,4 +29,4 @@ export const DEFAULT_PET: Pet = {
     id: "0",
     name: "string"
   }]
-};
+});

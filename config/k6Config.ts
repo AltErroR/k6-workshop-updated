@@ -1,5 +1,12 @@
-export const BASE_URL = 'https://petstore.swagger.io'
-export const API_KEY = 'special-key' 
-//I know it is good to put API_KEY to .env
-//  and get it from there but I didnt figure out how to do that 
+import { envConfigs } from "./envConfigs.ts"
+import { loadConfigs, LoadConfig } from "./loadConfigs.ts"
+import { EnvironmentConfig } from "../app/types.ts"
+import { resolveConfig } from "./configResolver.ts"
 
+// @ts-ignore
+export const ENV_NAME: string = __ENV.ENV ?? 'stage'
+// @ts-ignore
+export const LOAD_NAME: string = __ENV.LOAD ?? 'smoke'
+
+export const currentEnv: EnvironmentConfig = resolveConfig(envConfigs, ENV_NAME, 'ENV')
+export const currentLoad: LoadConfig = resolveConfig(loadConfigs, LOAD_NAME, 'LOAD')

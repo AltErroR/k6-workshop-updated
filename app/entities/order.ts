@@ -10,10 +10,10 @@ export interface Order {
   complete: boolean;
 }
 
-export const DEFAULT_ORDER: Order = {
+export const createDefaultOrder = (): Order => ({
   id: randomString(1,'123456789'),
   petId: randomString(6,'0123456789'),
   quantity: "1",
   status: "placed",
   complete: false
-};
+});

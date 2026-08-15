@@ -5,7 +5,7 @@ import { User } from "../../entities/user.ts";
 
 export class DeleteUserByUsername {
 
-    execute<T extends object>(username: string ,stepData: T): Omit<T, 'foundUser'> {
+    execute<T extends object>(username: string, stepData: T) {
         return group('Delete user group', function () {
 
             const resp = requestsManager.userService.deleteUser(username);

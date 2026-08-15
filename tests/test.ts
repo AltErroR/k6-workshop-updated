@@ -19,9 +19,11 @@ import http from 'k6/http';
 
 // @ts-ignore  - for disabling TypeScript error
 
+import { currentLoad } from "../config/k6Config.ts"
+
 export const options = {
-  vus: 1,
-  iterations: 1,
+  vus: currentLoad.vus,
+  iterations: currentLoad.iterations,
 };
 
 export default function() {

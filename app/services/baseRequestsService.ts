@@ -1,7 +1,7 @@
 import http, { RequestBody } from "k6/http"
-import { processResponse, buildUrl, resolveRequestParams, currentEnv } from "../utils.ts";
+import { processResponse, buildUrl, resolveRequestParams } from "../utils.ts";
 import { ExtendedParams, EnvironmentConfig } from "../types.ts";
-
+import { currentEnv } from "../../config/k6Config.ts";
 
 export class BaseRequestsService {
 
@@ -34,5 +34,4 @@ export class BaseRequestsService {
         processResponse(resp, finalParams)
         return resp
     }
-
 }

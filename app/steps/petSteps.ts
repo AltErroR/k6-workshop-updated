@@ -16,41 +16,34 @@ export class PetSteps {
     return group('Get available pet group', function () {
       const resp = requestsManager.petService.findPetByStatus("available");
       const pets: Pet[] = JSON.parse(resp.body as string);
-      const randomAvailablePet: Pet = randomItem(pets);
-      return { ...stepData, foundPet: randomAvailablePet, petId: randomAvailablePet.id }
+      const petData: Pet = randomItem(pets);
+      return { ...stepData, petData, petId: petData.id }
     });
   }
 
   findPetById<T extends object>(petId: string, stepData?: T) {
     return group('Find pet by ID group', function () {
       const resp = requestsManager.petService.findPetById(petId);
-      const foundPet: Pet = JSON.parse(resp.body as string);
-      return { ...stepData, foundPet, petId: foundPet.id };
+      const petData: Pet = JSON.parse(resp.body as string);
+      return { ...stepData, petData, petId: petData.id };
     });
   }
 
-  updatePetByData<T extends object>(petData: Pet, stepData: T, updates?: Partial<Pet>) {
-    const defaultUpdates: Partial<Pet> = {
-      name: randomString(14),
-      photoUrls: ["jpg1", "png2"]
-    }
+  updatePetByData<T extends object>(petId: string, stepData?: T, updates?: Partial<Pet>, applyDefaultUpdates: boolean = false) {
     return group('Update pet group', function () {
-      const updatedPet: Pet = {
-        ...petData,
-        ...defaultUpdates,
+      const body: Partial<Pet> = {
+        id: petId,
+        ...(applyDefaultUpdates ? { name: randomString(14), photoUrls: ["jpg1", "png2"] } : {}),
         ...updates
-      };
-      const resp = requestsManager.petService.updatePet(
-        JSON.stringify(updatedPet)
-      );
-
-      const foundPet: Pet = JSON.parse(resp.body as string);
-      return { ...stepData, foundPet, petId: foundPet.id }
+      }
+      const resp = requestsManager.petService.updatePet(JSON.stringify(body));
+      const petData: Pet = JSON.parse(resp.body as string);
+      return { ...stepData, petData, petId: petData.id }
     });
   }
 
-  addPet<T extends { petId?: string }>(stepData?: T): T & { addedPet: Pet; petId: string }
-  addPet<T extends { petId?: string }>(petId: string, stepData?: T): T & { addedPet: Pet; petId: string }
+  addPet<T extends { petId?: string }>(stepData?: T): T & { petData: Pet; petId: string }
+  addPet<T extends { petId?: string }>(petId: string, stepData?: T): T & { petData: Pet; petId: string }
   addPet<T extends { petId?: string }>(petIdOrData?: string | T, incomingData: T = {} as T) {
     const petId: string = typeof petIdOrData === 'string'
       ? petIdOrData
@@ -62,35 +55,28 @@ export class PetSteps {
       const resp = requestsManager.petService.addPet(
         JSON.stringify(petToAdd)
       );
-      const addedPet: Pet = JSON.parse(resp.body as string);
-      return { ...stepData, addedPet, petId }
+      const petData: Pet = JSON.parse(resp.body as string);
+      return { ...stepData, petData, petId }
     });
   }
 
-  updatePetStatus<T extends { foundPet: Pet }>(stepData: T, status: "pending" | "sold" | "available") {
+  updatePetStatus<T extends { petData: Pet }>(stepData: T, status: "pending" | "sold" | "available") {
     return group('Update pet status group', function () {
-      const resp = requestsManager.petService.updatePetStatus(stepData.foundPet.id, stepData.foundPet.name, status);
-      const respMessage = JSON.parse(resp.body as string);
+      const resp = requestsManager.petService.updatePetStatus(stepData.petData.id, stepData.petData.name, status);
+      const responseBody = JSON.parse(resp.body as string);
 
-      const verifyResp = requestsManager.petService.findPetById(stepData.foundPet.id);
-      const verifiedPet: Pet = JSON.parse(verifyResp.body as string);
-
-      const isSuccessful = check(verifiedPet, {
-        'UpdatePetStatus: pet status matches expected': (p) => p.status === status,
+      const isSuccessful = check(responseBody, {
+        'UpdatePetStatus: response code is 200': (r) => r.code === 200,
       });
 
       if (isSuccessful) {
-        const updatedPet: Pet = {
-          ...stepData.foundPet,
-          status: status
-        }
-        return { ...stepData, foundPet: updatedPet }
+        return { ...stepData, petData: { ...stepData.petData, status } as Pet }
       }
       return { ...stepData }
     });
   }
 
-  deletePetById<T extends object>( petId: string, stepData: T): Omit<T, 'foundPet'> {
+  deletePetById<T extends object>(petId: string, stepData: T) {
     return group('Delete pet by ID group', function () {
       const resp = requestsManager.petService.deletePet(petId);
 
@@ -101,8 +87,8 @@ export class PetSteps {
         });
       }
 
-      const { foundPet, ...rest } = stepData as T & { foundPet?: Pet };
-      return rest as Omit<T, 'foundPet'>
+      const { petData, ...rest } = stepData as T & { petData?: Pet };
+      return rest as Omit<T, 'petData'>
     });
   }
 

@@ -13,8 +13,7 @@ export interface User {
 }
 
 
-export const DEFAULT_USER: User =
-{
+export const createDefaultUser = (): User => ({
     id: randomString(6,'0123456789'),
     username: "string",
     firstName: "string",
@@ -23,4 +22,4 @@ export const DEFAULT_USER: User =
     password: "string",
     phone: "string",
     userStatus: "0"
-}
+})

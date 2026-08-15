@@ -40,7 +40,7 @@ export class StoreSteps {
     });
   }
 
-  deleteOrderById<T extends object>(orderId: string, stepData?: T): Omit<T, 'foundOrder'> {
+  deleteOrderById<T extends object>(orderId: string, stepData?: T) {
     return group('Delete order by ID group', function () {
       const resp = requestsManager.storeService.deleteOrder(orderId);
 
@@ -69,7 +69,7 @@ export class StoreSteps {
 
       if (getResp.status === 200) {
         const delResp = requestsManager.storeService.deleteOrder(testOrderId, { enabledStatusCheck: false, enabledBodyCheck: false } as any)
-        expect(delResp.status).toBe(200)
+        check(delResp, { 'Setup cleanup: order deleted or already gone': r => r.status === 200 || r.status === 404 })
       }
       return { ...stepData, testOrderId }
     });
